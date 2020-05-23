@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Pisual Mouse</title>
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/sketch.min.js"></script>
+<!--[if lte IE 8]><style>.main{display:none;} .support-note .note-ie{display:block;}</style><![endif]-->
+</head>
+<body id="body">
+	<div id="test" style=" position:fixed;top:0px;z-index:20;"></div>
+	<script>
+		// ----------------------------------------
+		// Particle
+		// ----------------------------------------
+		function Particle(x, y, radius) {
+		  this.init(x, y, radius);
+		}
+		Particle.prototype = {
+		  init: function(x, y, radius) {
+		    this.color = '#fff';
+		    this.x = x || 0.0;//圆心的位置
+		    this.y = y || 0.0;//圆心的位置
+		    this.vx = 0.0;
+		    this.vy = 0.0;
+		    this.theta = random(TWO_PI);//轨迹滑过范围
+		    this.radius = 12;//半径
+		    this.alive = true;
+		    this.wander = 1.15;
+		    this.drag = 0.92;
+		  },
+		  move: function() {
+		    this.x += this.vx;
+		    this.y += this.vy;
+		    this.vx *= this.drag;
+		    this.vy *= this.drag;
+			var lastnum2 = this.theta;
+		  	if(lastnum2>3.14){
+		  		this.theta += random(0, 0.05) * this.wander;
+		  	}else{
+		  		this.theta += random(-0.05, 0) * this.wander;
+		  	}
+		    this.vx += sin(this.theta) * 0.1;
+		    this.vy += cos(this.theta) * 0.5;
+		    this.radius *= 0.996;
+		    this.alive = this.radius > 7.8;
+		  },
+		  draw: function(ctx) {
+		    ctx.beginPath();
+		    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
+		    ctx.fillStyle = this.color;
+		    ctx.fill();
+		  }
+		};
+		var MAX_PARTICLES = 280;
+		var COLOURS = ['#FB9F0F'];//圆的可选颜色
+		var particles = [];
+		var pool = [];
+		var demo = Sketch.create({
+		  container: document.getElementById('test')
+		});
+		demo.spawn = function(x, y) {
+		  if (particles.length >= MAX_PARTICLES) {
+		    pool.push(particles.shift());
+		  }
+		  particle = pool.length ? pool.pop() : new Particle();
+		  particle.init(x, y, 12);
+		  particle.wander = random(1.1, 2.0);
+		  particle.color = random(COLOURS);
+		  particle.drag = random(0.9, 0.99);
+		  var lastnum = particle.theta;
+		  //force = random(2.0, 4.0);
+		  if(lastnum>3.14){
+		  	particle.theta = random(3.14,4.0);
+		  }else{
+		  	particle.theta = random(2.2,3.14);
+		  }
+		  particle.vx = sin(particle.theta);
+		  particle.vy = cos(particle.theta);
+		  particles.push(particle);
+		};
+		demo.update = function() {
+		  var i, particle;
+		  for (i = particles.length - 1; i >= 0; i--) {
+		    particle = particles[i];
+		    if (particle.alive)
+		      particle.move();
+		    else
+		      pool.push(particles.splice(i, 1)[0]);
+		  }
+		};
+		demo.draw = function() {
+		  demo.globalCompositeOperation = 'lighter';
+		  for (var i = particles.length - 1; i >= 0; i--) {
+		    particles[i].draw(demo);
+		  }
+		};
+		demo.click = function() {
+		  var particle, theta, force, touch, max, i, j, n;
+		  for (i = 0, n = demo.touches.length; i < n; i++) {
+		    touch = demo.touches[i], max = 30;
+		    for (j = 0; j < max; j++) {
+		      demo.spawn(touch.x, touch.y);
+		    }
+		  }
+		};
+	</script>
+</body>
+</html>
